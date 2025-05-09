@@ -21,11 +21,12 @@ torch.manual_seed(hash("by removing stochasticity") % 2**32 - 1)
 torch.cuda.manual_seed_all(hash("so runs are repeatable") % 2**32 - 1)
 
 # Device configuration
-device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+#device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+device = "cpu"
 
 # remove slow mirror from list of MNIST mirrors
-torchvision.datasets.MNIST.mirrors = [mirror for mirror in torchvision.datasets.MNIST.mirrors
-                                      if not mirror.startswith("http://yann.lecun.com")]
+#torchvision.datasets.MNIST.mirrors = [mirror for mirror in torchvision.datasets.MNIST.mirrors
+                                      #if not mirror.startswith("http://yann.lecun.com")]
 
 
 
@@ -39,24 +40,37 @@ def model_pipeline(cfg:dict) -> None:
       # make the model, data, and optimization problem
       model, train_loader, test_loader, criterion, optimizer = make(config)
 
+      for x, y in train_loader:
+          print("shape del dataloader: ", x.shape, y.shape)
+          break
+
       # and use them to train the model
       train(model, train_loader, criterion, optimizer, config)
 
+      print("TRAIN DONE\n")
+
       # and test its final performance
       test(model, test_loader)
+      print("TEST DONE\n")
 
     return model
 
 if __name__ == "__main__":
+
     wandb.login()
 
     config = dict(
-        epochs=5,
-        classes=10,
-        kernels=[16, 32],
-        batch_size=128,
-        learning_rate=5e-3,
-        dataset="MNIST",
-        architecture="CNN")
+        epochs=4,#10,
+        batch_size=32,
+        learning_rate=1e-3,
+        dataset="FMA_small",
+        architecture="CNN-GRU",
+        data_path="./fma_small",
+        metadata_path="./fma_metadata"
+    )
+
     model = model_pipeline(config)
+
+
+
 
