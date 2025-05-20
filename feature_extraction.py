@@ -1,57 +1,87 @@
 import torch
-import torchaudio
+import os
+from pathlib import Path
+import h5py
 import librosa
+import numpy as np
+import pandas as pd
+import torchaudio
+from tqdm import tqdm
 from transformers import Speech2TextProcessor
 
-# Load processor and model
-def load_model_and_processor(model_name="facebook/s2t-small-librispeech-asr"):
-    """
-    Load a speech-to-text processor and model.
+# Configuración para extracción de características
+SR = 22050       # Tasa de muestreo
+N_MELS = 128     # Número de bandas mel
+HOP_LENGTH = 512 # Hop length para STFT
+N_FFT = 2048     # Longitud de la ventana FFT
 
-    This function initializes a Speech2TextProcessor using a pre-trained model
-    specified by the `model_name` parameter. It returns the processor and the
-    corresponding model.
+
+def extract_and_save_features(audio_dir, metadata_csv, output_h5_path, duration=30.0):
+    """
+    Extrae las características mel de todos los archivos de audio y las guarda en un archivo HDF5.
 
     Args:
-        model_name (str): The name of the pre-trained model to load. Defaults to
-            "facebook/s2t-small-librispeech-asr".
-
-    Returns:
-        tuple: A tuple containing:
-            - processor (Speech2TextProcessor): The initialized speech-to-text processor.
-            - model: The corresponding model (currently undefined in the code).
-
-    Raises:
-        ValueError: If the model cannot be loaded or the processor initialization fails.
+        audio_dir (str): Directorio con los archivos de audio (estructura FMA: subcarpetas en base ID)
+        metadata_csv (str): Ruta al CSV de metadatos con MultiIndex (tracks.csv)
+        output_h5_path (str): Ruta donde guardar el archivo HDF5
+        duration (float): Duración en segundos para recortar/rellenar todos los audios
     """
-    processor = Speech2TextProcessor.from_pretrained(model_name)
-    return processor
+    # 1) Cargar metadatos con MultiIndex y configurar índice
+    metadata = pd.read_csv(
+        metadata_csv,
+        index_col=0,
+        header=[0,1],
+        low_memory=False
+    )
+    # Extraer la serie de géneros y filtrar las pistas disponibles en audio_dir
+    # Asumimos ficheros .mp3 con nombres zfilled a 6 dígitos y subcarpetas por los primeros 3 dígitos
+    mp3_paths = list(Path(audio_dir).rglob("*.mp3"))
+    available_ids = [int(p.stem) for p in mp3_paths]
+    genre_series = metadata[('track','genre_top')].loc[available_ids].dropna()
 
-# Load and preprocess audio
-# Carga un archivo .wav y lo adapta a 16kHz
-def load_audio(filepath, target_sr=16000):
-    """
-    Load an audio file, convert it to mono if necessary, and resample it to the target sample rate.
-    Args:
-        filepath (str): Path to the audio file to be loaded.
-        target_sr (int, optional): Target sample rate in Hz. Defaults to 16000.
-    Returns:
-        tuple: A tuple containing:
-            - waveform (torch.Tensor): The audio waveform as a 1D tensor.
-            - target_sr (int): The sample rate of the returned waveform.
-    """
-    waveform, sr = torchaudio.load(filepath)
-    
-    # Mono
-    if waveform.shape[0] > 1:
-        waveform = waveform.mean(dim=0, keepdim=True)
-    
-    # Resample if needed
-    if sr != target_sr:
-        resampler = torchaudio.transforms.Resample(orig_freq=sr, new_freq=target_sr)
-        waveform = resampler(waveform)
-    
-    return waveform.squeeze(), target_sr
+    # Mapea géneros a índices, con orden estable
+    unique_genres = sorted(genre_series.unique())
+    genre_dict = {g: i for i, g in enumerate(unique_genres)}
+
+    # 2) Crear carpeta destino si no existe
+    os.makedirs(os.path.dirname(output_h5_path), exist_ok=True)
+
+    # 3) Crear archivo HDF5 y grupos
+    with h5py.File(output_h5_path, 'w') as h5f:
+        features_grp = h5f.create_group('features')
+        labels_grp   = h5f.create_group('labels')
+
+        # Iterar solo sobre las pistas con género válido
+        for track_id, genre in tqdm(genre_series.items(), desc="Extrayendo features"):  # track_id es int
+            tid_str = str(track_id).zfill(6)
+            # Construir ruta al mp3 en FMA_SMALL
+            folder = tid_str[:3]
+            audio_path = os.path.join(audio_dir, folder, f"{tid_str}.mp3")
+            try:
+                # Cargar audio y recortar/pad
+                y, _ = librosa.load(audio_path, sr=SR, duration=duration)
+                target_len = int(duration * SR)
+                if len(y) < target_len:
+                    y = np.pad(y, (0, target_len - len(y)), 'constant')
+                else:
+                    y = y[:target_len]
+
+                # Mel spectrogram -> dB -> normalización [0,1]
+                mel = librosa.feature.melspectrogram(
+                    y=y, sr=SR, n_mels=N_MELS, n_fft=N_FFT, hop_length=HOP_LENGTH
+                )
+                mel_db = librosa.power_to_db(mel, ref=np.max)
+                eps = 1e-6
+                mel_norm = (mel_db - mel_db.min()) / (mel_db.max() - mel_db.min() + eps)
+
+                # Guardar features y label (int)
+                features_grp.create_dataset(tid_str, data=mel_norm, compression='lzf')
+                labels_grp.create_dataset(tid_str, data=genre_dict[genre])
+
+            except Exception as e:
+                print(f"Error procesando {tid_str}: {e}")
+
+    print(f"> Features y labels guardadas en {output_h5_path}")
 
 #  Normalize waveform
 #  Normaliza el volumen del audio
@@ -64,30 +94,5 @@ def trim_silence(waveform, sr):
     trimmed, _ = librosa.effects.trim(waveform.numpy(), top_db=20)
     return torch.tensor(trimmed)
 
-#  Prepare inputs for the model
-#  Prepara la entrada para un modelo de HuggingFace (lo usaremos?)
-def prepare_inputs(waveform, processor, sampling_rate=16000):
-    return processor(waveform, sampling_rate=sampling_rate, return_tensors="pt")
 
 
-
-
-if __name__ == "__main__":
-    # Example usage
-    model_name = "facebook/s2t-small-librispeech-asr"
-    processor = load_model_and_processor(model_name)
-
-    # Path to your audio file
-    audio_path = "processors/file_example_WAV_1MG.wav"
-    
-    # Transcribe the audio file
-    waveform, sr = load_audio(audio_path)
-    waveform = normalize_audio(waveform)
-    waveform = trim_silence(waveform, sr)
-
-    inputs = prepare_inputs(waveform, processor, sr)
-    input_features = inputs.input_features
-    
-    
-    
-    
