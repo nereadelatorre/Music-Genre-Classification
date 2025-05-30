@@ -1,11 +1,11 @@
-## Funció test:
+## Funció test
 ***
 
 ### Objectius:
-- Avaluar l'accuracy del model sobre dades no vistes.
-- Calcular mètriques de classificació detallades (accuracy, precisió, recall, F1-score).
+- Avaluar el model sobre el conjunt de test.
+- Calcular mètriques de classificació: accuracy, F1-score macro, F1-score weighted.
 - Generar i visualitzar la matriu de confusió.
-- Exportar el model entrenat a ONNX (opcional).
+- Exportar el model entrenat a ONNX.
 - Enregistrar els resultats a wandb per al seu seguiment.
 ---
 
@@ -18,81 +18,41 @@
 | `save`        | Si és `True`, exporta el model en format ONNX. |
 
 ---
-### Mode d’avaluació: 
 
-- El model es posa en mode eval() per desactivar dropout i batch norm dinàmic. 
-- No es calculen gradients (`torch.no_grad()`), ja que no s’està entrenant el model.
----
+### Funcionament de la funció:
 
-### Predicció: 
+1. **Mode d'avaluació (`eval`)**  
+   El model es posa en mode d’avaluació per assegurar que el model faci prediccions estables i coherents, desactivant parts que funcionen de manera aleatòria durant l'entrenament. A més, es desactiva el càlcul de gradients amb `torch.no_grad()` per reduir el consum de memòria i millorar l’eficiència durant la inferència.
 
-1. Es recorre el conjunt de test amb el `test_loader`.
-2. Es passen els espectrograms pel model per fer inferència.
-3. Es calcula la classe predita mitjançant `argmax`.
-4. Es recullen totes les prediccions i etiquetes reals.
-5. Es calcula l'**accuracy** total i s’imprimeix.
-6. Es registra a wandb amb:
-   ```python
-    wandb.log({"test_accuracy": accuracy}) 
-   ```
-7. Si `save=True`, també es guarda a:
+2. **Inferència**  
+   Es recorre el conjunt de test (`test_loader`) i es passen els espectrogrames pel model. 
 
-    ```python
-    wandb.run.summary["test_accuracy"] = accuracy
-    ```
+3. **Recollida de resultats**  
+   Es guarden totes les prediccions i etiquetes reals per calcular posteriorment mètriques.
 
----
+4. **Càlcul de mètriques globals**  
+   - **Accuracy**
+   - **F1-score (weighted)**
+   - **F1-macro**
 
-### Mètriques de classificació:
+5. **Matriu de confusió**  
+   Es genera una matriu de confusió per analitzar quines classes es confonen més. Es visualitza en dos formats:
+   - Comptes absoluts.
+   - Matriu normalitzada per files (recall per classe).
 
-- Es calcula el **classification report** amb `sklearn.metrics.classification_report`:
-  - Inclou: precisió, recall, F1 per classe i macro/micro mitjanes.
-  - Els gèneres musicals s’utilitzen com a noms de classe.
-- Es mostra el report per consola.
-- Es registra cada mètrica a `wandb.run.summary`.
+   Es desa com a imatge `.png` i s’enregistra a Weights & Biases.
+
+6. **Exportació a ONNX (opcional)**  
+   Si es passa el paràmetre `save=True`, el model es converteix al format `.onnx`, que permet utilitzar-lo en altres entorns com TensorRT, ONNX Runtime o altres aplicacions.
+
+7. **Registre a WandB**
+   Les mètriques i la imatge de la matriu de confusió s’enregistren automàticament a wandb, per poder fer seguiment i comparació d'experiments.
 
 ---
-### Accuracy per classe:
+### Mètriques d'avaluació:
+Per tal d’avaluar el rendiment del model, hem utilitzat les següents mètriques:
+- **Accuracy**: calcula la proporció total de prediccions correctes. Però pot resultar poc informativa en casos de desbalanceig entre classes (com és el nostre cas), ja que pot estar dominada per les classes majoritàries.
+- **F1-score macro**: calcula el F1-score per a cada classe per separat i en fa la mitjana no ponderada. D’aquesta manera, tracta totes les classes per igual, independentment de la seva freqüència, i és especialment útil per detectar si el model funciona malament amb les classes minoritàries.
+- **F1-score weighted**: Similar al F1 macro, però pondera el F1 de cada classe segons la seva proporció al conjunt de dades. Això ofereix una mesura més equilibrada tenint en compte el desbalanceig.
 
-- Es calcula l’accuracy per classe mitjançant:
-
-    ```python
-    np.mean(np.array(preds)[mask] == i)
-    ```
-
-- Es mostra a consola i es registra a wandb amb:
-
-    ```python
-    wandb.log({"per_class_accuracy": per_class_acc})
-    ```
-
----
-
-### Matriu de confusió:
-
-- Es genera la matriu amb `confusion_matrix`.
-- Els noms de gèneres es mostren a l’eix X/Y.
-- Es visualitza amb `seaborn.heatmap`.
-- Es desa com a imatge `.png` i es registra a wandb:
-
-    ```python
-    wandb.log({"confusion_matrix": wandb.Image('confusion_matrix.png')})
-    ```
-
----
-
-### Exportació ONNX (opcional):
-
-- Si `save=True`, el model es converteix a format `.onnx` amb `torch.onnx.export`.
-- Permet eixos dinàmics (batch size, time steps).
-- Es registra a wandb amb:
-
-    ```python
-    wandb.save("model.onnx")
-    ```
-
-- Si hi ha un error en l’exportació, es captura i s’imprimeix sense interrompre el test.
-
----
-
-
+Amb aquestes mètriques es pot analitzar no només el rendiment global del model, sinó també si aquest és capaç de reconèixer bé les classes minoritàries.
