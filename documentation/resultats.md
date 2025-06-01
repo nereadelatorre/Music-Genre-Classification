@@ -41,7 +41,7 @@ parameters:
 
 Un cop obtenim la millor combinació, executem el codi durant 30 epochs. Hem recollit diferents mètriques, com la pèrdua mitjana del train (epoch_avg_loss), la pèrdua de validació (val_loss) i la pèrdua per batch (batch_loss).
 
-<img src="\imatges\graphics\CNN1D-GRU1.jpg" alt="Gràfic pèrdues" width="700"/>
+<img src="/imatges/graphics/CNN1D-GRU1.jpg" alt="Gràfic pèrdues" width="700"/>
 
 
 Veiem que la pèrdua de validació comença a augmentar mentre la d'entrenament continua baixant. Això és un símptoma d’**overfitting**.
@@ -55,7 +55,7 @@ En aquesta nova execució del model, s’han incorporat diverses millores per ta
 
 Tornem a entrenar el model per veure les millores:
 
-<img src="\imatges\graphics\CNN1D-GRU2.jpg" alt="Gràfic pèrdues" width="500"/>
+<img src="/imatges/graphics/CNN1D-GRU2.jpg" alt="Gràfic pèrdues" width="500"/>
 
 En el primer gràfic, observem una millora clara respecte a l’execució anterior. En el segon gràfic, que mostra l’evolució del learning rate, podem veure com aquest es redueix en dues fases ben diferenciades.
 
@@ -72,7 +72,7 @@ D’altra banda, hem realitzat una **selecció dels gèneres** musicals presents
 
 Els resultats han estat:
 
-<img src="\imatges\graphics\CNN1D-GRU3.jpg" alt="img" width="500"/> 
+<img src="/imatges/graphics/CNN1D-GRU3.jpg" alt="img" width="500"/> 
 
 
 Després d’aplicar tècniques de regularització i mitigació de l’overfitting, veiem que la corba de la loss s’ha estabilitzat notablement: tant la train loss com la validation loss disminueixen de manera coordinada, evitant l’increment progressiu que es produïa la primera execució.
@@ -93,7 +93,7 @@ Per capturar millor les dependències temporals, hem utilitzat una LSTM **bidire
 
 Veiem que els canvis no han estat gaire significatius:
 
-<img src="\imatges\graphics\CNN1D-LSTM2.jpg" alt="img" width="500"/> 
+<img src="/imatges/graphics/CNN1D-LSTM2.jpg" alt="img" width="500"/> 
 
 Veiem que en el learning rate, es produeixen dues baixades durant l'entrenament, les quals afavoreixen una reducció suau però més pronunciada de les pèrdues en els trams posteriors. En relació amb la accuracy de validació, observem un comportament molt similar al de l'execució anterior: un augment ràpid a l'inici seguit d'una estabilització al voltant del **68%**.
 
@@ -101,7 +101,7 @@ Veiem que en el learning rate, es produeixen dues baixades durant l'entrenament,
 
 Veiem que a partir del pas 400k (època 10) la disminució de la loss és molt més lenta, per tal d'evitar això, provem  una **reducció del learning rate menys permissiva** (ajustant el paràmetre threshold a 1e-4 i establint threshold_mode='abs'). I considerem aplicar una estratègia alternativa com **StepLR** amb un pas de 10 èpoques, que redueix el learning rate de forma més sistemàtica i controlada.
 
-<img src="\imatges\graphics\CNN1D-LSTM3.jpg" alt="img" width="500"/> 
+<img src="/imatges/graphics/CNN1D-LSTM3.jpg" alt="img" width="500"/> 
 
 Amb aquestes millores, aconseguim una reducció de la loss important i un accuracy al validation del **69%**, indicant una petita millora en la capacitat de generalització del model.
 
@@ -124,7 +124,7 @@ Un cop hem fet l'execució del model amb els valors dels millors hiperparàmetre
 ***
 Com a primera conclusió d'aquests primers models amb CNN de 1 dimensió, veiem que aconseguim pràctiment el **mateix rendiment** tant per la RNN GRU com amb la LSTM. Aquí es pot veure la loss i l'accuracy del validation d'ambdues arquitectures:
 
-<img src="\imatges\graphics\Comparacio1D.jpg" alt="img" width="600"/> 
+<img src="/imatges/graphics/Comparacio1D.jpg" alt="img" width="600"/> 
 
 ***
 En aquesta secció següent fem un canvi d'arquitectura en la CNN. Ara provem amb una CNN de 2 dimensions, que, com bé expliquem a arquitectures.md, esperem millors resultats ja que podrem reconèixer sons amb variacions freqüencials (no només temporals).
@@ -135,7 +135,7 @@ En aquesta secció següent fem un canvi d'arquitectura en la CNN. Ara provem am
 Comencem avaluant aquesta nova arquitectura amb la RNN de LSTM. En un inici vam provar amb una simplificació de l'estructura que amb 1D, la mateixa con
 configuració de hiperparàmetres, etc. Vam obtenir:
 
-<img src="\imatges\graphics\CNN2D-LSTM.jpg" alt="img" width="600"/> 
+<img src="/imatges/graphics/CNN2D-LSTM.jpg" alt="img" width="600"/> 
 
 No veiem un comportament molt diferenciat, però si observem un valor en l'accuracy del **71%**. El que ens indica que ja obtenim bon resultat de partida, que probablment podrem millorar amb la cerca d'hiperparàmetres.
 
@@ -147,11 +147,11 @@ Aquests canvis no van implicar cap canvi significatiu en el comportament del mod
 ### CNN(2D) + GRU
 Amb aquesta nova arquitectura obtenim uns molts bons resultats de base, **72%** d'accuracy:
 
-<img src="\imatges\graphics\CNN2D-GRU.jpg" alt="img" width="600"/>
+<img src="/imatges/graphics/CNN2D-GRU.jpg" alt="img" width="600"/>
 
 Tot i que veiem certa tendència a overfitting en la corba de loss, això ho vam solucionar de la mateixa forma que amb la LSTM, (MaxPool després de les ReLu en les convolucions i fer un Dropout a la GRU) permetent-nos tant reduir la complexitat com reforçar la generalització del model:
 
-<img src="\imatges\graphics\CNN2D-GRU2.jpg" alt="img" width="300"/>
+<img src="/imatges/graphics/CNN2D-GRU2.jpg" alt="img" width="300"/>
 
 De manera que, finalment, hem realitzat la mateixa cerca de paràmetres amb ambdues arquitectures. Hem utilitzat els mateixos paràmetres i rangs que en l'anterior cerca. 
 
@@ -165,7 +165,7 @@ Per tractar aquest problema, vam ajustar la funció de pèrdua (**CrossEntropy p
 
 Si bé la tècnica va millorar el rendiment en les classes minoritàries, va tenir un efecte advers en les majoritàries: la seva loss va augmentar molt, la qual cosa va acabar perjudicant el rendiment global del model:
 
-<img src="\imatges\graphics\crossEntropy.jpg" alt="img" width="500"/>
+<img src="/imatges/graphics/crossEntropy.jpg" alt="img" width="500"/>
 
 Veiem la comparació entre el model previ (rosa) i el model amb el Cross Entropy ponderat aplicat (marró).
 Vam concloure que el balanceig mitjançant pesos en la funció de pèrdua, encara que és útil per a equilibrar mètriques per classe, no necessàriament optimitza el resultat general quan el desbalanceig és molt accentuat.
@@ -176,7 +176,7 @@ També vam voler probar amb l'arquitectura individiual de la CNN en 2 dimensions
 
 En aquest gràfic mostrem la comparació de la pèrdua de la CNN(2D) (color verd), i CNN(2D) amb GRU (color groc):
 
-<img src="\imatges\graphics\CNN(2D).jpg" alt="img" width="500"/>
+<img src="/imatges/graphics/CNN(2D).jpg" alt="img" width="500"/>
 
 El model CNN+GRU mostra un rendiment superior respecte a la CNN sola. La CNN captura patrons espectrals locals en els espectrograms, però la incorporació de la GRU permet modelar la dinàmica temporal d’aquests patrons. La GRU, mitjançant el seu mecanisme de portes (reset i update), filtra informació seqüencial rellevant, elimina soroll i prioritza transicions rítmiques i harmòniques significatives. Això millora la capacitat predictiva del model sense augmentar significativament el cost computacional, resultant en una menor pèrdua i una estabilitat més gran.
 
@@ -231,7 +231,7 @@ A partir d’aquí obtenim les dues versions que utilitzem:
 ### Resultats i anàlisi quantitativa
 Com que el comportament dels gràfics de totes les mètriques estudiades evoluciona igual respecte els models entrenats, a continuació mostrem les corbes de la la loss i del F1 macro obtingudes, ja que aquesta mètrica ens ofereix una visió clara de la capacitat del nostre model per reconèixer correctament cada gènere, especialment els menys representats.
 
-<img src="\imatges\results\results.png" alt="img" width="700"/>
+<img src="/imatges/results/results.png" alt="img" width="700"/>
 
 Veiem que totes quatre arquitectures segueixen pràcticament la **mateixa trajectòria**: en els primers 200 000 passos aprenen amb rapidesa (la validation loss baixa i el F1-macro puja amb força pendent) i a partir d’uns 600 000–800 000 passos comencen a estabilitzar-se al voltant d’un F1-macro d’un 0.60-0.62. També observem que hi ha petites oscil·lacions puntuals, però tots convergeixen a resultats molt similars. Això ens confirma que, després de l’etapa inicial d’aprenentatge ràpid, les millores addicionals venen més de polir hiperparàmetres o augmentacions que no pas de canviar d’arquitectura.
 
@@ -251,7 +251,7 @@ Observem també diferències de valors entre les mètriques. Això es deu princi
 
 Per analitzar més en profunditat aquestes confusions en la classificació, observem la **matriu de confusió** (mostrem la del model amb CNN(2D) i GRU):
 
-<img src="\imatges\results\confusion_matrix.png" alt="img" width="600"/>
+<img src="/imatges/results/confusion_matrix.png" alt="img" width="600"/>
 
 Veiem que les classes més ben classificades són **Rock**, **Hip-Hop**, **Old-Time / Historic** i **Classical**, amb valors elevats a la diagonal. En canvi, veiem una confusió clara en
 molts gèneres (com Folk, Jazz i Instrumental) que es confonen amb Rock, probablement es degui a que Rock és el gènere més predominant (amb més de 14000 tracks), i per tant el model capta moltes més variacions de característiques, fàcils de confondre amb els gèneres no tan diferenciats
@@ -270,7 +270,7 @@ Per dur a terme aquest anàlisi qualitatiu, ho hem dividit en dues parts: primer
 
 Per tal de comprendre com el nostre model separa els diferents gèneres en l’espai de característiques, vam extreure els embeddings del penúltim layer de la xarxa i els vam projectar a dues dimensions amb t-SNE. El codi carrega el dataset filtrat, obté les sortides del feature extractor i l’encoder (hem utilitzat GRU) per a cada espectrograma, i aplica t-SNE amb perplexitat 30 i 1 000 iteracions per obtenir una disposició 2D. A la figura, cada punt representa una pista i està pintat segons el seu gènere.
 
-<img src="\imatges\results\tsne.png" alt="img" width="800"/>
+<img src="/imatges/results/tsne.png" alt="img" width="800"/>
 
 
 En el resultat observem clarament quins són els gèneres ben definits gràcies a les agrupacions més compactes, com per exemple Rock, Hip-Hop i, sobre tot Old-Time / Historic. Les classes minoritàries (amb menys del 5 % del dataset), en general, apareixen disperses i, en alguns casos, s’hi ajunten amb gèneres veïns (com per exemple Pop que veiem que es troba distribuït en gairebé tot el pla), mostrant-nos que formen nuclis molt més difusos. 

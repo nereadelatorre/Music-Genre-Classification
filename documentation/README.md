@@ -83,9 +83,11 @@ Per no haver d’executar la conversió d’àudio a espectrograma a cada sessi�
 
 - Vam carregar cada arxiu d’àudio i ens vam assegurar que tots tinguessin la mateixa duració (30 segons). Si un arxiu era més curt, s’omplia amb silenci (zeros), i si era més llarg, es retallava.
 - A partir del senyal d’àudio, es va generar l’espectrograma Mel, una representació visual que mostra com l’energia de diferents bandes de freqüència canvia al llarg del temps. Per fer-ho, primer s’aplica una Transformada de Fourier de curta durada (STFT) sobre finestres temporals, i després es mapeja l’espectre a l’escala de Mel, que imita la percepció humana del so.
-    <img src="../imatges/others/espectrograma_audio.jpg" alt="Arquitectura LSTM" width="400"/>
 
-    *Figura 3: Exemple d’espectrograma Mel d’un track d’àudio.*
+<img src="../imatges/others/espectrograma_audio.jpg" alt="Arquitectura LSTM" width="400"/>
+
+*Figura 3: Exemple d’espectrograma Mel d’un track d’àudio.*
+
 - Els valors obtinguts es converteixen a dB (decibels) utilitzant l’escala logarítmica per comprimir les diferències extremes d’intensitat sonora (el rang dinàmic) i fer més rellevants les variacions suaus de so. Posteriorment, el resultat és una imatge 2D que vam normalitzar amb valors entre 0 i 1.
 - El resultat és una imatge 2D que té una forma final de (128, 1292), on 128 és el nombre de bandes de Mel i 1292 és el nombre de passos temporals per track.
 - També vam transformar cada gènere musical a un número, perquè el model pugui treballar amb etiquetes numèriques en lloc de text.
