@@ -64,7 +64,7 @@ Per tal d'entendre i visualitzar millor la distribució i les característiques 
 
 Primerament, es va fer un recompte del nombre de gèneres i del nombre de tracks per gènere. En aquest pas es va observar una gran quantitat de registres que no disposaven de cap gènere assignat, els quals van ser tractats en el preprocessament. Es va generar un gràfic de barres per representar la distribució de les pistes segons el seu gènere principal. Aquesta visualització facilita la detecció de desproporcions entre gèneres, com per exemple, si alguns estan sobrerepresentats mentre que altres tenen molt pocs exemples.
 
-<img src="../imatges/others/grafic_tracks_per_genere.jpg" alt="Arquitectura LSTM" width="400"/> 
+<img src="/imatges/others/grafic_tracks_per_genere.jpg" alt="Arquitectura LSTM" width="400"/> 
 
 *Figura 1: Distribució tracks per gènere*
 
@@ -72,7 +72,7 @@ A partir del gràfic es pot observar clarament que la distribució de gèneres �
 
 Per aprofundir en el tipus de dades amb què es treballa, es va seleccionar un track per visualitzar la seva ona d’àudio, que mostra l’amplitud en funció del temps.
 
-<img src="../imatges/others/ona_audio.jpg" alt="Arquitectura LSTM" width="400"/>
+<img src="/imatges/others/ona_audio.jpg" alt="Arquitectura LSTM" width="400"/>
 
 *Figura 2: Exemple ona d'àudio d’un track*
 
@@ -84,7 +84,7 @@ Per no haver d’executar la conversió d’àudio a espectrograma a cada sessi�
 - Vam carregar cada arxiu d’àudio i ens vam assegurar que tots tinguessin la mateixa duració (30 segons). Si un arxiu era més curt, s’omplia amb silenci (zeros), i si era més llarg, es retallava.
 - A partir del senyal d’àudio, es va generar l’espectrograma Mel, una representació visual que mostra com l’energia de diferents bandes de freqüència canvia al llarg del temps. Per fer-ho, primer s’aplica una Transformada de Fourier de curta durada (STFT) sobre finestres temporals, i després es mapeja l’espectre a l’escala de Mel, que imita la percepció humana del so.
 
-<img src="../imatges/others/espectrograma_audio.jpg" alt="Arquitectura LSTM" width="400"/>
+<img src="/imatges/others/espectrograma_audio.jpg" alt="Arquitectura LSTM" width="400"/>
 
 *Figura 3: Exemple d’espectrograma Mel d’un track d’àudio.*
 
